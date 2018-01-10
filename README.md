@@ -2,7 +2,7 @@
 
 PCA-Gauss is a system for non-interactive differentially-private data release. The implementation is based on the following paper:
 
-* *Chanyaswad, Thee, Changchang Liu, and Prateek Mittal. “Coupling Dimensionality Reduction with Generative Model for Non-Interactive Private Data Release.” arXiv preprint arXiv:1709.00054 (2017).* * (https://arxiv.org/abs/1709.00054)
+*Chanyaswad, Thee, Changchang Liu, and Prateek Mittal. “Coupling Dimensionality Reduction with Generative Model for Non-Interactive Private Data Release.” arXiv preprint arXiv:1709.00054 (2017).* (https://arxiv.org/abs/1709.00054)
 
 Hence, please refer to this paper for more detail on the PCA-Gauss system.
 
