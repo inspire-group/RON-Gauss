@@ -2,7 +2,7 @@
 
 PCA-Gauss is a system for non-interactive differentially-private data release. The implementation is based on the following paper:
 
-Chanyaswad, Thee, Changchang Liu, and Prateek Mittal. "Coupling Dimensionality Reduction with Generative Model for Non-Interactive Private Data Release." arXiv preprint arXiv:1709.00054 (2017).
+[Chanyaswad, Thee, Changchang Liu, and Prateek Mittal. “Coupling Dimensionality Reduction with Generative Model for Non-Interactive Private Data Release.” arXiv preprint arXiv:1709.00054 (2017).] (https://arxiv.org/abs/1709.00054)
 
 Hence, please refer to this paper for more detail on the PCA-Gauss system.
 
@@ -10,10 +10,10 @@ The implementation is for using DPPCA with the Gaussian model for all three algo
 
 ## How to:
 
-The main class to run the system is the ‘PCA-Gauss’ class. This class is initialized with three parameters:
-algorithm = ‘supervised’, ‘unsupervised’, or ‘gmm’;
-epilonGauss = the epsilon value used for fitting the Gaussian model.
-epsilonPca = the epsilon value used for DPPCA.
+The main class to run the system is the `PCA-Gauss` class. This class is initialized with three parameters:
+`algorithm` = ‘supervised’, ‘unsupervised’, or ‘gmm’;
+`epilonGauss` = the epsilon value used for fitting the Gaussian model.
+`epsilonPca` = the epsilon value used for DPPCA.
 
 The main method is the ‘.generate_dpdata’, which takes in, among others, the private data and the dimension to reduce the data to. It then returns the differentially-private synthesized data according to the parameters set in the initialization.
 
