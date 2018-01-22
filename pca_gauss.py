@@ -106,13 +106,11 @@ class PCA-Gauss:
 
 class DPPCA:
 	def __init__(self, X, epsilon, a=1.0, seed = 0):
-		self.mean_ = np.mean(X, axis=0)
-		Xbar = X - self.mean_
 		(N,M) = X.shape
 		
 		b = ((M**2)*(a**2) + 4*M*(a**2) + (a**2))/(N*epsilon)
 		
-		R = np.inner(Xbar.T,Xbar.T)/N
+		R = np.inner(X.T,X.T)/N
 		prng = np.random.RandomState(seed)
 		lapNoise = prng.laplace(scale=b,size=(M,M))
 		cov = R + lapNoise
