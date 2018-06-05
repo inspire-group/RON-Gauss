@@ -9,7 +9,7 @@
 import numpy as np
 import scipy
 
-class RON-Gauss:
+class RON_Gauss:
 	
 	def __init__(self, algorithm='supervised', epsilonMean=1.0, epsilonCov=1.0):
 		self.algorithm = algorithm
