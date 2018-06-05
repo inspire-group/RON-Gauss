@@ -71,8 +71,8 @@ class RON-Gauss:
 					synX = np.vstack((synX,synthData))
 				
 				synY = np.append(synY,lab*np.ones(N))
-				dpX = synX
-				dpY = synY
+			dpX = synX
+			dpY = synY
 			
 		return (dpX,dpY)
 		
