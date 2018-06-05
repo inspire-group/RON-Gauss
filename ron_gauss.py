@@ -8,6 +8,7 @@
 
 import numpy as np
 import scipy
+from sklearn import preprocessing
 
 class RON_Gauss:
 	
@@ -18,6 +19,7 @@ class RON_Gauss:
 	
 	
 	def generate_dpdata(self, X, dimension, y=None, maxY=None):
+		prng = np.random.RandomState()
 		if self.algorithm == 'unsupervised':
 			(Xbar,_) = self.data_preprocessing(X,self.epsilonMean)
 			(Xred,_) = self.ron_projection(Xbar,dimension)
