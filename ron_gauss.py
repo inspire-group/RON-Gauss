@@ -39,7 +39,7 @@ class RON_Gauss:
 			(Xred,_) = self.ron_projection(Xbar,dimension)
 			
 			(N,P) = Xred.shape
-			b = (2.*np.sqrt(P) + 4.*np.sqrt(P)*maxY + a**2)/(N*self.epsilonCov)
+			b = (2.*np.sqrt(P) + 4.*np.sqrt(P)*maxY + maxY**2)/(N*self.epsilonCov)
 			
 			yReshaped = y.reshape(len(y),1)
 			augMat = np.hstack((Xred,yReshaped))
