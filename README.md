@@ -15,7 +15,9 @@ The main class to run the system is the `RON-Gauss` class. This class is initial
 - `epilonMean` = the epsilon value used for deriving the sample mean;
 - `epsilonCov` = the epsilon value used for deriving the sample covariance.
 
-The main method is the `generate_dpdata`, which takes in, among others, the private data and the dimension to reduce the data to. It then returns the differentially-private synthesized data according to the parameters set in the initialization.
+The main method is the `generate_dpdata`, which takes in, among others, the private data and the dimension to reduce the data to. It then returns the differentially-private synthesized data according to the parameters set in the initialization. There are two additional parameters for `generate_dpdata`:
+- `reconstruct` = specify whether to reconstruct the synthetic data back to the original feature space after the projectoin;
+- `meanAdjusted` = specify whether to add the DP-mean back to the synthetic data for `unsupervised` and `supervised` algorithms.
 
 Some details on the inputs of `generate_dpdata`:
 1) For the `unsupervised` algorithm, only the feature data matrix `X` is needed. 
