@@ -2,7 +2,7 @@
 
 RON-Gauss is a system for non-interactive differentially-private data release. The implementation is based on the following paper:
 
-*Thee Chanyaswad, Changchang Liu, and Prateek Mittal. “RON-Gauss: Enhancing Utility in Non-Interactive Private Data Release,” Proceedings on Privacy Enhancing Technologies (PETS), vol. 2019, no. 1, 2018.* (https://arxiv.org/abs/1709.00054)
+*Thee Chanyaswad, Changchang Liu, and Prateek Mittal. “RON-Gauss: Enhancing Utility in Non-Interactive Private Data Release,” Proceedings on Privacy Enhancing Technologies (PETS), vol. 2019, no. 1, 2018.* (https://content.sciendo.com/view/journals/popets/2019/1/article-p26.xml)
 
 Hence, please refer to this paper for more detail on the RON-Gauss model.
 
