@@ -1,1 +1,5 @@
+# Avoid synciing pycharm project information.
+.idea/
+
+# Mac filesystem 
 .DS_Store
