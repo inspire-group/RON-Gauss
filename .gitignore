@@ -3,3 +3,8 @@
 
 # Mac filesystem 
 .DS_Store
+
+# Test coverage generated stuff.
+__pycache__/
+tests/.pytest_cache/
+

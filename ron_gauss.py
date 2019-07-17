@@ -13,7 +13,9 @@
 # Version 1.2
 # 	- Add mean adjustment option for unsupervised and supervised algs.
 #
-
+# Version 1.3 (submitted by mlopatka; 17-07-2019)
+#  	- Enforce python black formatting guidelines.
+#   -
 
 import numpy as np
 import scipy
