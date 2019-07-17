@@ -16,7 +16,7 @@ The main class to run the system is the `RON-Gauss` class. This class is initial
 - `epsilonCov` = the epsilon value used for deriving the sample covariance.
 
 The main method is the `generate_dpdata`, which takes in, among others, the private data and the dimension to reduce the data to. It then returns the differentially-private synthesized data according to the parameters set in the initialization. There are two additional parameters for `generate_dpdata`:
-- `reconstruct` = specify whether to reconstruct the synthetic data back to the original feature space after the projectoin;
+- `reconstruct` = specify whether to reconstruct the synthetic data back to the original feature space after the projection;
 - `meanAdjusted` = specify whether to add the DP-mean back to the synthetic data for `unsupervised` and `supervised` algorithms.
 
 Some details on the inputs of `generate_dpdata`:
@@ -27,7 +27,7 @@ Some details on the inputs of `generate_dpdata`:
 
 ### Prerequisites
 
-The implementation is in Python 2 and `numpy` and `scipy` are required.
+The implementation is in Python 2. The required packages are `numpy`, `scipy`, and `sklearn.preprocessing`.
 
 
 ## Author
