@@ -1,6 +1,3 @@
-# import sys
-# sys.path.append('../')
-
 import pytest
 import ron_gauss
 import numpy as np
