@@ -1,1 +1,10 @@
+# Avoid synciing pycharm project information.
+.idea/
+
+# Mac filesystem 
 .DS_Store
+
+# Test coverage generated stuff.
+__pycache__/
+tests/.pytest_cache/
+
