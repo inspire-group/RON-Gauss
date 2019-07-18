@@ -43,46 +43,18 @@ class RONGauss:
     ):
         
         if self.algorithm == "unsupervised":
-            x_dp = self._unsupervised_ron_gauss(X, dimension, n_samples, reconstruct, centering, prng_seed)
+            x_dp = self._unsupervised_rongauss(X, dimension, n_samples, reconstruct, centering, prng_seed)
             y_dp = None
 
         elif self.algorithm == "supervised":
-            x_dp, y_dp = self._supervised_ron_gauss(X, dimension, y, n_samples, max_y, reconstruct, centering, prng_seed)
+            x_dp, y_dp = self._supervised_rongauss(X, dimension, y, n_samples, max_y, reconstruct, centering, prng_seed)
 
         elif self.algorithm == "gmm":
-            synX = np.array([])
-            synY = np.array([])
-            for lab in np.unique(y):
-                idx = np.where(y == lab)
-                xClass = X[idx]
-                (Xbar, muPriv) = self._data_preprocessing(xClass, self.epsilon_mean)
-                (Xred, onProj) = self._ron_projection(Xbar, dimension)
-
-                (N, P) = Xred.shape
-                b = (2.0 * np.sqrt(P)) / (N * self.epsilon_cov)
-                if numSamples is None:
-                    numSam = N
-                else:
-                    numSam = numSamples
-                muRed = np.inner(muPriv, onProj)
-                scatMat = np.inner(Xred.T, Xred.T) / N
-                lapNoise = np.random.laplace(scale=b, size=(P, P))
-                dpCov = scatMat + lapNoise
-                synthData = prng.multivariate_normal(muRed, dpCov, numSam)
-                if reconstruct:
-                    synthData = self._reconstruction(synthData, onProj)
-                if len(synX) == 0:
-                    synX = synthData
-                else:
-                    synX = np.vstack((synX, synthData))
-
-                synY = np.append(synY, lab * np.ones(numSam))
-            dpX = synX
-            dpY = synY
-
+            x_dp, y_dp = self._gmm_rongauss(X,dimension, y, n_samples, reconstruct, prng_seed)
+        
         return (x_dp, y_dp)
     
-    def _unsupervised_ron_gauss(
+    def _unsupervised_rongauss(
         self,
         X,
         dimension,
@@ -117,7 +89,7 @@ class RONGauss:
             x_dp = x_dp + mu_dp
         return x_dp
 
-    def _supervised_ron_gauss(
+    def _supervised_rongauss(
         self,
         X,
         dimension,
@@ -160,6 +132,46 @@ class RONGauss:
             x_dp = x_dp + mu_dp
         
         return (x_dp, y_dp)
+
+    def _gmm_rongauss(
+        self,
+        X,
+        dimension,
+        y,
+        n_samples,
+        reconstruct,
+        prng_seed,
+    ):
+        prng = np.random.RandomState(prng_seed)
+        syn_x = np.array([])
+        syn_y = np.array([])
+        for label in np.unique(y):
+            idx = np.where(y == label)
+            x_class = X[idx]
+            (x_bar, mu_dp) = self._data_preprocessing(x_class, self.epsilon_mean)
+            (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
+
+            (N, P) = x_tilda.shape
+            noise_var = (2.0 * np.sqrt(P)) / (N * self.epsilon_cov)
+            if n_samples is None:
+                num_samples = N
+            else:
+                num_samples = n_samples
+            mu_dp_tilda = np.inner(mu_dp, proj_matrix)
+            cov_matrix = np.inner(x_tilda.T, x_tilda.T) / N
+            laplace_noise = prng.laplace(scale=noise_var, size=(P, P))
+            cov_dp = cov_matrix + laplace_noise
+            synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, num_samples)
+            if reconstruct:
+                synth_data = self._reconstruction(synth_data, proj_matrix)
+            if len(syn_x) == 0:
+                syn_x = synth_data
+            else:
+                syn_x = np.vstack((syn_x, synth_data))
+
+            syn_y = np.append(syn_y, label * np.ones(num_samples))
+        
+        return syn_x, syn_y
 
     @staticmethod
     def _data_preprocessing(X, epsMu, prng_seed=None):
