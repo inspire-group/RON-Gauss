@@ -23,10 +23,12 @@ from sklearn import preprocessing
 
 
 class RONGauss:
-    def __init__(self, algorithm="supervised", epsilonMean=1.0, epsilonCov=1.0):
+    """TO-DO: Add class description
+    """
+    def __init__(self, algorithm="supervised", epsilon_mu=1.0, epsilon_sigma=1.0):
         self.algorithm = algorithm
-        self.epsilonMean = epsilonMean
-        self.epsilonCov = epsilonCov
+        self.epsilon_mu = epsilon_mu
+        self.epsilon_sigma = epsilon_sigma
 
     def generate_dpdata(
         self,
@@ -41,11 +43,11 @@ class RONGauss:
     ):
         prng = np.random.RandomState(seed)
         if self.algorithm == "unsupervised":
-            (Xbar, muPriv) = self._data_preprocessing(X, self.epsilonMean)
+            (Xbar, muPriv) = self._data_preprocessing(X, self.epsilon_mu)
             (Xred, onProj) = self._ron_projection(Xbar, dimension)
 
             (N, P) = Xred.shape
-            b = (2.0 * np.sqrt(P)) / (N * self.epsilonCov)
+            b = (2.0 * np.sqrt(P)) / (N * self.epsilon_sigma)
             if numSamples is None:
                 numSam = N
             else:
@@ -65,12 +67,12 @@ class RONGauss:
                 dpX = dpX + muPriv
 
         elif self.algorithm == "supervised":
-            (Xbar, muPriv) = self._data_preprocessing(X, self.epsilonMean)
+            (Xbar, muPriv) = self._data_preprocessing(X, self.epsilon_mu)
             (Xred, onProj) = self._ron_projection(Xbar, dimension)
 
             (N, P) = Xred.shape
             b = (2.0 * np.sqrt(P) + 4.0 * np.sqrt(P) * maxY + maxY ** 2) / (
-                N * self.epsilonCov
+                N * self.epsilon_sigma
             )
             if numSamples is None:
                 numSam = N
@@ -99,11 +101,11 @@ class RONGauss:
             for lab in np.unique(y):
                 idx = np.where(y == lab)
                 xClass = X[idx]
-                (Xbar, muPriv) = self._data_preprocessing(xClass, self.epsilonMean)
+                (Xbar, muPriv) = self._data_preprocessing(xClass, self.epsilon_mu)
                 (Xred, onProj) = self._ron_projection(Xbar, dimension)
 
                 (N, P) = Xred.shape
-                b = (2.0 * np.sqrt(P)) / (N * self.epsilonCov)
+                b = (2.0 * np.sqrt(P)) / (N * self.epsilon_sigma)
                 if numSamples is None:
                     numSam = N
                 else:
@@ -125,15 +127,16 @@ class RONGauss:
             dpY = synY
 
         return (dpX, dpY)
-
-    def _data_preprocessing(self, X, epsMu):
+    
+    def _data_preprocessing(self, X, epsMu, prng_seed=None):
         (N, M) = X.shape
         # pre-normalize
         Xscaled = preprocessing.normalize(X)
         # derive dp-mean
         mu = np.mean(Xscaled, axis=0)
         bMu = np.sqrt(M) / (N * epsMu)
-        lapNoise = np.random.laplace(scale=bMu, size=M)
+        prng = np.random.RandomState(seed=prng_seed)
+        lapNoise = prng.laplace(scale=bMu, size=M)
         muPriv = mu + lapNoise
         # centering
         Xbar = Xscaled - muPriv
