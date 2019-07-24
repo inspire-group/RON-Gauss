@@ -13,9 +13,9 @@
 # Version 1.2
 # 	- Add mean adjustment option for unsupervised and supervised algs.
 #
-# Version 1.3 (submitted by mlopatka; 17-07-2019)
+# Version 1.3 (submitted by mlopatka 17-07-2019)
 #  	- Enforce python black formatting guidelines.
-#   -
+#   - Add test coverage
 
 import numpy as np
 import scipy
@@ -76,6 +76,7 @@ class RONGauss:
                 numSam = N
             else:
                 numSam = numSamples
+
             yReshaped = y.reshape(len(y), 1)
             augMat = np.hstack((Xred, yReshaped))
             scatMat = np.inner(augMat.T, augMat.T) / N
