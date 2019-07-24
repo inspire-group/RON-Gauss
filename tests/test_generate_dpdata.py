@@ -60,7 +60,7 @@ def test_simple_gmm_data():
 
 def test_simple_supervised_data():
     test_data = data_gen_helper(1000, 3)
-    test_labels = np.random.choice([0, 1], size=100, p=[1./2, 1./2])
+    test_labels = np.random.choice([0, 1], size=1000, p=[1./2, 1./2])
     test_ron_gauss_instance = ron_gauss.RONGauss(algorithm="supervised")
     # TODO: Specify a reasonable value for maxY that excercises the code in supervised condition.
     dp_data = test_ron_gauss_instance.generate_dpdata(X=test_data,
