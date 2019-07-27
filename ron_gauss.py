@@ -67,8 +67,8 @@ class RONGauss:
         prng_seed,
     ):
         prng = np.random.RandomState(prng_seed)
-        (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean)
-        (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
+        (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean, prng)
+        (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
 
         (n, p) = x_tilda.shape
         noise_var = (2.0 * np.sqrt(p)) / (n * self.epsilon_cov)
@@ -100,8 +100,8 @@ class RONGauss:
         prng_seed,
     ):  
         prng = np.random.RandomState(prng_seed)
-        (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean)
-        (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
+        (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean, prng)
+        (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
 
         (n, p) = x_tilda.shape
         noise_var = (2.0 * np.sqrt(p) + 4.0 * np.sqrt(p) * max_y + max_y ** 2) / (
@@ -138,13 +138,13 @@ class RONGauss:
         prng_seed,
     ):
         prng = np.random.RandomState(prng_seed)
-        syn_x = np.array([])
+        syn_x = []
         syn_y = np.array([])
         for label in np.unique(y):
             idx = np.where(y == label)
             x_class = X[idx]
-            (x_bar, mu_dp) = self._data_preprocessing(x_class, self.epsilon_mean)
-            (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
+            (x_bar, mu_dp) = self._data_preprocessing(x_class, self.epsilon_mean, prng)
+            (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
 
             (n, p) = x_tilda.shape
             noise_var = (2.0 * np.sqrt(p)) / (n * self.epsilon_cov)
@@ -155,47 +155,48 @@ class RONGauss:
             synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, n_samples)
             if reconstruct:
                 synth_data = self._reconstruction(synth_data, proj_matrix)
-            if len(syn_x) == 0:
-                syn_x = synth_data
-            else:
-                syn_x = np.vstack((syn_x, synth_data))
-
+            
+            syn_x.append(synth_data)
             syn_y = np.append(syn_y, label * np.ones(n_samples))
         
+        syn_x = np.array(syn_x)
         return syn_x, syn_y
 
     @staticmethod
-    def _data_preprocessing(X, epsMu, prng_seed=None):
+    def _data_preprocessing(X, epsilon_mean, prng=None):
+        if prng is None:
+            prng = np.random.RandomState()
         (n, m) = X.shape
         # pre-normalize
-        Xscaled = preprocessing.normalize(X)
+        x_norm = preprocessing.normalize(X)
         # derive dp-mean
-        mu = np.mean(Xscaled, axis=0)
-        bMu = np.sqrt(m) / (n * epsMu)
-        prng = np.random.RandomState(seed=prng_seed)
-        lapNoise = prng.laplace(scale=bMu, size=m)
-        muPriv = mu + lapNoise
+        mu = np.mean(x_norm, axis=0)
+        noise_var_mu = np.sqrt(m) / (n * epsilon_mean)
+        laplace_noise = prng.laplace(scale=noise_var_mu, size=m)
+        dp_mean = mu + laplace_noise
         # centering
-        Xbar = Xscaled - muPriv
+        x_bar = x_norm - dp_mean
         # re-normalize
-        Xbar = preprocessing.normalize(Xbar)
-        return Xbar, muPriv
+        x_bar = preprocessing.normalize(x_bar)
+        return x_bar, dp_mean
 
-    def _ron_projection(self, Xbar, dim):
-        (n, m) = Xbar.shape
-        randProj = self._generate_rand_onproj(m)
-        onProj = randProj[0:dim]  # take the rows
-        Xred = np.inner(Xbar, onProj)
-        return Xred, onProj
+    def _apply_ron_projection(self, x_bar, dimiension, prng=None):
+        (n, m) = x_bar.shape
+        full_projection_matrix = self._generate_ron_matrix(m, prng)
+        ron_matrix = full_projection_matrix[0:dimension]  # take the rows
+        x_tilda = np.inner(x_bar, ron_matrix)
+        return x_tilda, ron_matrix
 
-    def _reconstruction(self, Xproj, onProj):
-        Xrecon = np.inner(Xproj, onProj.T)
-        return Xrecon
+    def _reconstruction(self, x_projected, ron_matrix):
+        x_reconstructed = np.inner(x_projected, ron_matrix.T)
+        return x_reconstructed
 
-    def _generate_rand_onproj(self, m):
+    def _generate_ron_matrix(self, m, prng=None):
+        if prng is None:
+            prng = np.random.RandomState()
         # generate random matrix
-        randMat = np.random.uniform(size=(m, m))
+        random_matrix = prng.uniform(size=(m, m))
         # QR factorization
-        Q, R = scipy.linalg.qr(randMat)
-        direction = Q
-        return direction
+        q_matrix, r_matrix = scipy.linalg.qr(random_matrix)
+        ron_matrix = q_matrix
+        return ron_matrix
