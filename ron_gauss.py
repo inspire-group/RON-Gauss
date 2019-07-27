@@ -15,7 +15,12 @@
 #
 # Version 1.3 (submitted by mlopatka; 17-07-2019)
 #  	- Enforce python black formatting guidelines.
-#   -
+#   
+#
+# Version 1.4 (tchanyaswad 27-7-2019)
+#   - Change variable names and improve readability.
+#
+#
 
 import numpy as np
 import scipy
@@ -138,7 +143,7 @@ class RONGauss:
         prng_seed,
     ):
         prng = np.random.RandomState(prng_seed)
-        syn_x = []
+        syn_x = None
         syn_y = np.array([])
         for label in np.unique(y):
             idx = np.where(y == label)
@@ -155,8 +160,11 @@ class RONGauss:
             synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, n_samples)
             if reconstruct:
                 synth_data = self._reconstruction(synth_data, proj_matrix)
+            if syn_x is None:
+                syn_x = synth_data
+            else:
+                syn_x = np.vstack((syn_x, synth_data))
             
-            syn_x.append(synth_data)
             syn_y = np.append(syn_y, label * np.ones(n_samples))
         
         syn_x = np.array(syn_x)
@@ -180,7 +188,7 @@ class RONGauss:
         x_bar = preprocessing.normalize(x_bar)
         return x_bar, dp_mean
 
-    def _apply_ron_projection(self, x_bar, dimiension, prng=None):
+    def _apply_ron_projection(self, x_bar, dimension, prng=None):
         (n, m) = x_bar.shape
         full_projection_matrix = self._generate_ron_matrix(m, prng)
         ron_matrix = full_projection_matrix[0:dimension]  # take the rows
