@@ -8,3 +8,6 @@
 __pycache__/
 tests/.pytest_cache/
 
+.vscode/settings.json
+ron_gauss.pyc
+tests/__init__.pyc
