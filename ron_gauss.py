@@ -41,7 +41,10 @@ class RONGauss:
         centering=False,
         prng_seed=None,
     ):
-        
+        (n, m) = X.shape
+        if n_samples is None:
+            n_samples = n
+
         if self.algorithm == "unsupervised":
             x_dp = self._unsupervised_rongauss(X, dimension, n_samples, reconstruct, centering, prng_seed)
             y_dp = None
@@ -67,16 +70,12 @@ class RONGauss:
         (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean)
         (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
 
-        (N, P) = x_tilda.shape
-        noise_var = (2.0 * np.sqrt(P)) / (N * self.epsilon_cov)
-        if n_samples is None:
-            num_samples = N
-        else:
-            num_samples = n_samples
-        cov_matrix = np.inner(x_tilda.T, x_tilda.T) / N
-        laplace_noise = prng.laplace(scale=noise_var, size=(P, P))
+        (n, p) = x_tilda.shape
+        noise_var = (2.0 * np.sqrt(p)) / (n * self.epsilon_cov)
+        cov_matrix = np.inner(x_tilda.T, x_tilda.T) / n
+        laplace_noise = prng.laplace(scale=noise_var, size=(p, p))
         cov_dp = cov_matrix + laplace_noise
-        synth_data = prng.multivariate_normal(np.zeros(P), cov_dp, num_samples)
+        synth_data = prng.multivariate_normal(np.zeros(p), cov_dp, n_samples)
         x_dp = synth_data
         if reconstruct:
             x_dp = self._reconstruction(x_dp, proj_matrix)
@@ -104,21 +103,17 @@ class RONGauss:
         (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean)
         (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
 
-        (N, P) = x_tilda.shape
-        noise_var = (2.0 * np.sqrt(P) + 4.0 * np.sqrt(P) * max_y + max_y ** 2) / (
-            N * self.epsilon_cov
+        (n, p) = x_tilda.shape
+        noise_var = (2.0 * np.sqrt(p) + 4.0 * np.sqrt(p) * max_y + max_y ** 2) / (
+            n * self.epsilon_cov
         )
-        if n_samples is None:
-            num_samples = N
-        else:
-            num_samples = n_samples
         y_reshaped = y.reshape(len(y), 1)
         augmented_mat = np.hstack((x_tilda, y_reshaped))
-        cov_matrix = np.inner(augmented_mat.T, augmented_mat.T) / N
+        cov_matrix = np.inner(augmented_mat.T, augmented_mat.T) / n
         laplace_noise = prng.laplace(scale=noise_var, size=cov_matrix.shape)
         cov_dp = cov_matrix + laplace_noise
 
-        synth_data = prng.multivariate_normal(np.zeros(P + 1), cov_dp, num_samples)
+        synth_data = prng.multivariate_normal(np.zeros(p + 1), cov_dp, n_samples)
         x_dp = synth_data[:, 0:-1]
         y_dp = synth_data[:, -1]
         if reconstruct:
@@ -151,17 +146,13 @@ class RONGauss:
             (x_bar, mu_dp) = self._data_preprocessing(x_class, self.epsilon_mean)
             (x_tilda, proj_matrix) = self._ron_projection(x_bar, dimension)
 
-            (N, P) = x_tilda.shape
-            noise_var = (2.0 * np.sqrt(P)) / (N * self.epsilon_cov)
-            if n_samples is None:
-                num_samples = N
-            else:
-                num_samples = n_samples
+            (n, p) = x_tilda.shape
+            noise_var = (2.0 * np.sqrt(p)) / (n * self.epsilon_cov)
             mu_dp_tilda = np.inner(mu_dp, proj_matrix)
-            cov_matrix = np.inner(x_tilda.T, x_tilda.T) / N
-            laplace_noise = prng.laplace(scale=noise_var, size=(P, P))
+            cov_matrix = np.inner(x_tilda.T, x_tilda.T) / n
+            laplace_noise = prng.laplace(scale=noise_var, size=(p, p))
             cov_dp = cov_matrix + laplace_noise
-            synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, num_samples)
+            synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, n_samples)
             if reconstruct:
                 synth_data = self._reconstruction(synth_data, proj_matrix)
             if len(syn_x) == 0:
@@ -169,20 +160,20 @@ class RONGauss:
             else:
                 syn_x = np.vstack((syn_x, synth_data))
 
-            syn_y = np.append(syn_y, label * np.ones(num_samples))
+            syn_y = np.append(syn_y, label * np.ones(n_samples))
         
         return syn_x, syn_y
 
     @staticmethod
     def _data_preprocessing(X, epsMu, prng_seed=None):
-        (N, M) = X.shape
+        (n, m) = X.shape
         # pre-normalize
         Xscaled = preprocessing.normalize(X)
         # derive dp-mean
         mu = np.mean(Xscaled, axis=0)
-        bMu = np.sqrt(M) / (N * epsMu)
+        bMu = np.sqrt(m) / (n * epsMu)
         prng = np.random.RandomState(seed=prng_seed)
-        lapNoise = prng.laplace(scale=bMu, size=M)
+        lapNoise = prng.laplace(scale=bMu, size=m)
         muPriv = mu + lapNoise
         # centering
         Xbar = Xscaled - muPriv
@@ -191,8 +182,8 @@ class RONGauss:
         return Xbar, muPriv
 
     def _ron_projection(self, Xbar, dim):
-        (N, M) = Xbar.shape
-        randProj = self._generate_rand_onproj(M)
+        (n, m) = Xbar.shape
+        randProj = self._generate_rand_onproj(m)
         onProj = randProj[0:dim]  # take the rows
         Xred = np.inner(Xbar, onProj)
         return Xred, onProj
