@@ -19,7 +19,7 @@
 #
 # Version 1.4 (tchanyaswad 27-7-2019)
 #   - Change variable names and improve readability.
-#
+#   - Add docstring
 #
 
 import numpy as np
@@ -28,7 +28,58 @@ from sklearn import preprocessing
 
 
 class RONGauss:
-    """TO-DO: Add class description
+    """RON-Gauss: Synthesizing Data with Differential Privacy
+
+    This module implements RON-Gauss, which is a method for non-interactive differentially-private data release based on 
+    random orthornormal (RON) projection and Gaussian generative model. RON-Gauss leverages the Diaconis-Freedman-Meckes (DFM) effect,
+    which states that most random projections of high-dimensional data approaches Gaussian.
+
+    The main method of the `RONGauss` class is `_generate_dpdata()`. It takes in the original data as inputs, and, depending
+    on the algorithm chosen, returns the differentially private data.
+    
+    Parameters
+    ----------
+    algorithm : string {'supervised', 'unsupervised', 'gmm'}
+        supervised : 
+            implements RON-Gauss for supervised learning, especially for regression. This algorithm
+            requires both the feature data and the target label as inputs. In addition, it requires
+            `max_y` to be specified.
+        unsupervised :
+            implements RON-Gauss for unsupervised learning, so only the feature data are required.
+            This mode will return `None` for `dp_y`.
+        gmm :
+            implements RON-Gauss for classification. This algorithm requires both the feature data
+            and the target label as inputs. The target label has to be categorical.
+    epsilon_mean : float (default 1.0)
+        The privacy budget for computing the mean. The sum of `epsilon_mean` and `epsilon_cov` is the total
+        privacy budget spent.
+    epsilon_cov : float (default 1.0)
+        The privacy budget for computing the covariance. The sum of `epsilon_mean` and `epsilon_cov` is the total
+        privacy budget spent.
+    
+    References
+    ----------
+    *Thee Chanyaswad, Changchang Liu, and Prateek Mittal. "RON-Gauss: Enhancing Utility in Non-Interactive Private
+    Data Release," Proceedings on Privacy Enhancing Technologies (PETS), vol. 2019, no. 1, 2018.*
+    (https://content.sciendo.com/view/journals/popets/2019/1/article-p26.xml)
+    
+    Examples
+    --------
+    >>> import ron_gauss
+    >>> import numpy as np
+    >>> X = np.random.normal(size=(1000,100))
+    >>> dim = 10
+    >>> # try unsupervised
+    >>> rongauss_unsup = ron_gauss.RONGauss(algorithm='unsupervised')
+    >>> dp_x, _ = rongauss_unsup.generate_dpdata(X, dim)
+    >>> # try supervised
+    >>> y = np.random.uniform(low=0.0, high=1.0, size=1000)
+    >>> rongauss_sup = ron_gauss.RONGauss(algorithm='supervised')
+    >>> dp_x, dp_y = rongauss_sup.generate_dpdata(X, dim, y, max_y = 1.0)
+    >>> # try gmm
+    >>> y = np.random.choice([0,1], size=1000)
+    >>> rongauss_gmm = ron_gauss.RONGauss(algorithm='gmm')
+    >>> dp_x, dp_y = rongauss_gmm.generate_dpdata(X, dim, y)
     """
     def __init__(self, algorithm="supervised", epsilon_mean=1.0, epsilon_cov=1.0):
         self.algorithm = algorithm
@@ -40,12 +91,50 @@ class RONGauss:
         X,
         dimension,
         y=None,
-        n_samples=None,
         max_y=None,
-        reconstruct=False,
+        n_samples=None,
+        reconstruct=True,
         centering=False,
         prng_seed=None,
     ):
+        """Generate differentially-private dataset using RON-Gauss
+        Parameters
+        ----------
+        X : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        dimension : int < M_features
+            The dimension for the data to be reduced to.
+        y : numpy.ndarray, shape = [n_samples] (default None)
+            Target values.
+            unsupervised : this parameter is not used.
+            supervised : required.
+            gmm : required and the values should be categorical.
+        n_samples : int (default None)
+            The number of samples to be synthesized. If None is passed, the returned number of samples will
+            be equal to N_samples of X.
+        max_y : float (default None)
+            The maximum absolute value that the target label can take. For example, if y is [0,1], then
+            max_y = 1. If y is [-2,1], then max_y = 2. This is required and used by the supervised
+            algorithm only.
+        reconstruct : bool (default True)
+            An option to reconstrut the projected synthesized data back to the original space. If True, the
+            returned data will have the same dimension as X. If False, the returned data will have the dimension
+            specified by the parameter `dimension`.
+        centering : bool (default False)
+            An option to automatically center the synthesized data. If False, the mean will be the
+            differentially-private mean derived from X.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_dp : numpy.ndarray, shape = [n_samples, M_features] or [n_samples, dimensions]
+            The differentially-private feature data. If `reconstruct` is True, this will be [n_samples, M_features].
+            If `reconstruct` is False, it will be [n_samples, dimensions].
+        y_dp : numpy.ndarray, shape = [n_samples]
+            For `unsupervised`, this will be None.
+            For `supervised` and `gmm`, this will be the differentially private target label.
+        """
         (n, m) = X.shape
         if n_samples is None:
             n_samples = n
