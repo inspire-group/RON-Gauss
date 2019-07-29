@@ -123,7 +123,7 @@ class RONGauss:
             specified by the parameter `dimension`.
         centering : bool (default False)
             An option to automatically center the synthesized data. If False, the mean will be the
-            differentially-private mean derived from X.
+            differentially-private mean derived from X. This parameter is always False for 'gmm'.
         prng_seed : int (default None)
             This is to specify the seed used in randomized algorithms used.
         
