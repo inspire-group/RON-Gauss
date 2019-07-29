@@ -13,14 +13,15 @@
 # Version 1.2
 # 	- Add mean adjustment option for unsupervised and supervised algs.
 #
-# Version 1.3 (submitted by mlopatka; 17-07-2019)
+# Version 1.3 (submitted by mlopatka 17-07-2019)
 #  	- Enforce python black formatting guidelines.
-#   
+#   - Add test coverage
 #
 # Version 1.4 (tchanyaswad 27-7-2019)
 #   - Change variable names and improve readability.
 #   - Add docstring
 #
+
 
 import numpy as np
 import scipy
@@ -163,7 +164,6 @@ class RONGauss:
         prng = np.random.RandomState(prng_seed)
         (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean, prng)
         (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
-
         (n, p) = x_tilda.shape
         noise_var = (2.0 * np.sqrt(p)) / (n * self.epsilon_cov)
         cov_matrix = np.inner(x_tilda.T, x_tilda.T) / n
@@ -247,6 +247,7 @@ class RONGauss:
             laplace_noise = prng.laplace(scale=noise_var, size=(p, p))
             cov_dp = cov_matrix + laplace_noise
             synth_data = prng.multivariate_normal(mu_dp_tilda, cov_dp, n_samples)
+
             if reconstruct:
                 synth_data = self._reconstruction(synth_data, proj_matrix)
             if syn_x is None:
@@ -256,7 +257,6 @@ class RONGauss:
             
             syn_y = np.append(syn_y, label * np.ones(n_samples))
         
-        syn_x = np.array(syn_x)
         return syn_x, syn_y
 
     @staticmethod
