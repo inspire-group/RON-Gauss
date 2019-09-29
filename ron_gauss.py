@@ -298,3 +298,10 @@ class RONGauss:
         q_matrix, r_matrix = scipy.linalg.qr(random_matrix)
         ron_matrix = q_matrix
         return ron_matrix
+    
+    @staticmethod
+    def _normalize_sample_wise(X):
+        (n,p) = X.shape
+        sample_norms = np.linalg.norm(X, axis=1) #norms of each sample
+        x_normalized = X/(np.outer(sample_norms,np.ones(p)))
+        return x_normalized
