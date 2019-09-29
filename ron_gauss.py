@@ -25,8 +25,6 @@
 
 import numpy as np
 import scipy
-from sklearn import preprocessing
-
 
 class RONGauss:
     """RON-Gauss: Synthesizing Data with Differential Privacy
