@@ -27,7 +27,7 @@ Some details on the inputs of `generate_dpdata`:
 
 ### Prerequisites
 
-The implementation is in Python 2 and has been tested for compatibility with Python 3. The required packages are `numpy`, and `scipy`.
+The implementation is in Python 2 and has been tested for compatibility with Python 3. The required packages are `numpy`, and `scipy`. In addition, `sklearn.preprocessing` is required for testing.
 
 
 ## Author

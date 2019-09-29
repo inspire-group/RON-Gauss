@@ -324,6 +324,7 @@ class RONGauss:
         syn_x = None
         syn_y = np.array([])
         for label in np.unique(y):
+            #iterate through each class
             idx = np.where(y == label)
             x_class = X[idx]
             (x_bar, mu_dp) = self._data_preprocessing(x_class, self.epsilon_mean, prng)
