@@ -266,7 +266,7 @@ class RONGauss:
             prng = np.random.RandomState()
         (n, m) = X.shape
         # pre-normalize
-        x_norm = preprocessing.normalize(X)
+        x_norm = RONGauss._normalize_sample_wise(X)
         # derive dp-mean
         mu = np.mean(x_norm, axis=0)
         noise_var_mu = np.sqrt(m) / (n * epsilon_mean)
@@ -275,7 +275,7 @@ class RONGauss:
         # centering
         x_bar = x_norm - dp_mean
         # re-normalize
-        x_bar = preprocessing.normalize(x_bar)
+        x_bar = RONGauss._normalize_sample_wise(x_bar)
         return x_bar, dp_mean
 
     def _apply_ron_projection(self, x_bar, dimension, prng=None):
