@@ -25,8 +25,6 @@
 
 import numpy as np
 import scipy
-from sklearn import preprocessing
-
 
 class RONGauss:
     """RON-Gauss: Synthesizing Data with Differential Privacy
@@ -162,6 +160,32 @@ class RONGauss:
         centering,
         prng_seed,
     ):
+        """Generate differentially-private dataset using the unsupervised RON-Gauss
+        Parameters
+        ----------
+        X : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        dimension : int < M_features
+            The dimension for the data to be reduced to.
+        n_samples : int (default None)
+            The number of samples to be synthesized. If None is passed, the returned number of samples will
+            be equal to N_samples of X.
+        reconstruct : bool (default True)
+            An option to reconstrut the projected synthesized data back to the original space. If True, the
+            returned data will have the same dimension as X. If False, the returned data will have the dimension
+            specified by the parameter `dimension`.
+        centering : bool (default False)
+            An option to automatically center the synthesized data. If False, the mean will be the
+            differentially-private mean derived from X. This parameter is always False for 'gmm'.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_dp : numpy.ndarray, shape = [n_samples, M_features] or [n_samples, dimensions]
+            The differentially-private feature data. If `reconstruct` is True, this will be [n_samples, M_features].
+            If `reconstruct` is False, it will be [n_samples, dimensions].
+        """
         prng = np.random.RandomState(prng_seed)
         (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean, prng)
         (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
@@ -194,6 +218,40 @@ class RONGauss:
         centering,
         prng_seed,
     ):  
+        """Generate differentially-private dataset using the supervised RON-Gauss
+        Parameters
+        ----------
+        X : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        dimension : int < M_features
+            The dimension for the data to be reduced to.
+        y : numpy.ndarray, shape = [n_samples] (default None)
+            Target values.
+        n_samples : int (default None)
+            The number of samples to be synthesized. If None is passed, the returned number of samples will
+            be equal to N_samples of X.
+        max_y : float
+            The maximum absolute value that the target label can take. For example, if y is [0,1], then
+            max_y = 1. If y is [-2,1], then max_y = 2.
+        reconstruct : bool (default True)
+            An option to reconstrut the projected synthesized data back to the original space. If True, the
+            returned data will have the same dimension as X. If False, the returned data will have the dimension
+            specified by the parameter `dimension`.
+        centering : bool (default False)
+            An option to automatically center the synthesized data. If False, the mean will be the
+            differentially-private mean derived from X. This parameter is always False for 'gmm'.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_dp : numpy.ndarray, shape = [n_samples, M_features] or [n_samples, dimensions]
+            Differentially-private feature data. If `reconstruct` is True, this will be [n_samples, M_features].
+            If `reconstruct` is False, it will be [n_samples, dimensions].
+        y_dp : numpy.ndarray, shape = [n_samples]
+            Differentially private target label.
+        """
+
         prng = np.random.RandomState(prng_seed)
         (x_bar, mu_dp) = self._data_preprocessing(X, self.epsilon_mean, prng)
         (x_tilda, proj_matrix) = self._apply_ron_projection(x_bar, dimension, prng)
@@ -232,6 +290,36 @@ class RONGauss:
         reconstruct,
         prng_seed,
     ):
+        """Generate differentially-private dataset using the GMM RON-Gauss
+        Parameters
+        ----------
+        X : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        dimension : int < M_features
+            The dimension for the data to be reduced to.
+        y : numpy.ndarray, shape = [n_samples] (default None)
+            Target values, which hould be categorical.
+        n_samples : int (default None)
+            The number of samples to be synthesized. If None is passed, the returned number of samples will
+            be equal to N_samples of X.
+        reconstruct : bool (default True)
+            An option to reconstrut the projected synthesized data back to the original space. If True, the
+            returned data will have the same dimension as X. If False, the returned data will have the dimension
+            specified by the parameter `dimension`.
+        centering : bool (default False)
+            An option to automatically center the synthesized data. If False, the mean will be the
+            differentially-private mean derived from X. This parameter is always False for 'gmm'.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_dp : numpy.ndarray, shape = [n_samples, M_features] or [n_samples, dimensions]
+            Differentially-private feature data. If `reconstruct` is True, this will be [n_samples, M_features].
+            If `reconstruct` is False, it will be [n_samples, dimensions].
+        y_dp : numpy.ndarray, shape = [n_samples]
+            Differentially private target label.
+        """
         prng = np.random.RandomState(prng_seed)
         syn_x = None
         syn_y = np.array([])
@@ -262,23 +350,59 @@ class RONGauss:
 
     @staticmethod
     def _data_preprocessing(X, epsilon_mean, prng=None):
+        """
+        This is the DATA_PREPROCESSING algorithm based on Algo. 1 in the paper.
+        Parameters
+        ----------
+        X : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        epsilon_mean : float
+            The privacy budget used for computing the mean.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_bar : numpy.ndarray, shape = [N_samples, M_features]
+            The pre-processed data which are pre-normalized, centered, and re-normalized.
+        mean_dp : numpy.ndarray, shape = [M_features]
+            The differentially-private mean used in the centering.
+        """
         if prng is None:
             prng = np.random.RandomState()
         (n, m) = X.shape
         # pre-normalize
-        x_norm = preprocessing.normalize(X)
+        x_norm = RONGauss._normalize_sample_wise(X)
         # derive dp-mean
         mu = np.mean(x_norm, axis=0)
         noise_var_mu = np.sqrt(m) / (n * epsilon_mean)
         laplace_noise = prng.laplace(scale=noise_var_mu, size=m)
-        dp_mean = mu + laplace_noise
+        mean_dp = mu + laplace_noise
         # centering
-        x_bar = x_norm - dp_mean
+        x_bar = x_norm - mean_dp
         # re-normalize
-        x_bar = preprocessing.normalize(x_bar)
-        return x_bar, dp_mean
+        x_bar = RONGauss._normalize_sample_wise(x_bar)
+        return x_bar, mean_dp
 
     def _apply_ron_projection(self, x_bar, dimension, prng=None):
+        """
+        This is the RON_PROJECTION algorithm based on Algo. 2 in the paper.
+        Parameters
+        ----------
+        x_bar : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        dimension : int < M_features
+            The dimension for the data to be reduced to.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        x_tilda : numpy.ndarray, shape = [N_samples, dimension]
+            The dimension-reduced data.
+        ron_matrix : numpy.ndarray, shape = [dimension, M_features]
+            The RON projection matrix used for dimensionality reduction.
+        """
         (n, m) = x_bar.shape
         full_projection_matrix = self._generate_ron_matrix(m, prng)
         ron_matrix = full_projection_matrix[0:dimension]  # take the rows
@@ -286,10 +410,38 @@ class RONGauss:
         return x_tilda, ron_matrix
 
     def _reconstruction(self, x_projected, ron_matrix):
+        """
+        The function used to project the dimension-reduced data back to the original space.
+        Parameters
+        ----------
+        x_projected : numpy.ndarray, shape = [N_samples, P_dimension]
+            The dimension-reduced data.
+        ron_matrix : numpy.ndarray, shpae = [P_dimension, M_features]
+            The RON projection matrix used to produce the dimension-reduced data.
+        
+        Returns
+        -------
+        x_reconstructed : numpy.ndarray, shape = [N_samples, M_features]
+            The reconstructed data.
+        """
         x_reconstructed = np.inner(x_projected, ron_matrix.T)
         return x_reconstructed
 
     def _generate_ron_matrix(self, m, prng=None):
+        """
+        Generate a RON projection matrix using QR factorization.
+        Parameters
+        ----------
+        m : int
+            The dimension of the projection matrix.
+        prng_seed : int (default None)
+            This is to specify the seed used in randomized algorithms used.
+        
+        Returns
+        -------
+        ron_matrix : numpy.ndarray, shape = [m, m]
+            The RON projection matrix.
+        """
         if prng is None:
             prng = np.random.RandomState()
         # generate random matrix
@@ -298,3 +450,22 @@ class RONGauss:
         q_matrix, r_matrix = scipy.linalg.qr(random_matrix)
         ron_matrix = q_matrix
         return ron_matrix
+    
+    @staticmethod
+    def _normalize_sample_wise(x):
+        """
+        Sample-wise normalization
+        Parameters
+        ----------
+        x : numpy.ndarray, shape = [N_samples, M_features]
+            Feature data.
+        
+        Returns
+        -------
+        x_normalized : numpy.ndarray, shape = [N_samples, M_features]
+            The sample-wise normalized data
+        """
+        (n,p) = x.shape
+        sample_norms = np.linalg.norm(x, axis=1) #norms of each sample
+        x_normalized = x/(np.outer(sample_norms,np.ones(p)))
+        return x_normalized
