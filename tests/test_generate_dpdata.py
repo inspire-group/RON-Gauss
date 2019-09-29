@@ -16,8 +16,8 @@ def normality_test_helper(dpdata):
 def test_defaults():
     test_ron_gauss_instance = ron_gauss.RONGauss()
     assert(test_ron_gauss_instance.algorithm == "supervised")
-    assert(test_ron_gauss_instance.epsilonCov == 1.0)
-    assert(test_ron_gauss_instance.epsilonMean == 1.0)
+    assert(test_ron_gauss_instance.epsilon_cov == 1.0)
+    assert(test_ron_gauss_instance.epsilon_mean == 1.0)
 
 
 def test_dimensionality_agnostic_execution():
@@ -28,8 +28,8 @@ def test_dimensionality_agnostic_execution():
         test_data = data_gen_helper(rand_num_pts, i)
         # Simulate DP-safe lower dimensionality data.
         test_ron_gauss_instance = ron_gauss.RONGauss(algorithm="unsupervised")
-        dims_reduced = int(np.ceil((i - 1) * (rand_num_pts / 200)))
-        dp_data = test_ron_gauss_instance.generate_dpdata(test_data, dims_reduced)
+        dims_reduced = int(np.ceil((i - 1) * (rand_num_pts / 200.)))        
+        dp_data = test_ron_gauss_instance.generate_dpdata(test_data, dims_reduced,reconstruct=False)
         # Test dimensions are as expected.
         assert dp_data[0].shape[0] == rand_num_pts
         assert dp_data[0].shape[1] == dims_reduced
@@ -66,6 +66,6 @@ def test_simple_supervised_data():
     dp_data = test_ron_gauss_instance.generate_dpdata(X=test_data,
                                                       dimension=2,
                                                       y=test_labels,
-                                                      maxY=np.array(1)
+                                                      max_y=np.array(1)
                                                       )
     assert normality_test_helper(dp_data)

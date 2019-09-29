@@ -82,6 +82,7 @@ class RONGauss:
     >>> rongauss_gmm = ron_gauss.RONGauss(algorithm='gmm')
     >>> dp_x, dp_y = rongauss_gmm.generate_dpdata(X, dim, y)
     """
+    
     def __init__(self, algorithm="supervised", epsilon_mean=1.0, epsilon_cov=1.0):
         self.algorithm = algorithm
         self.epsilon_mean = epsilon_mean
